@@ -28,7 +28,7 @@
  * LAT register (output latch)
  */
 
-#define LED LATAbits.LATA0
+
 
 main() {
     
@@ -72,22 +72,11 @@ main() {
 
     while(1){
         
-        LED = 0;
-        delay_ms(500);
-        //while(TXSTAbits.TRMT == 0){}// wait until last tx was send
-        //UART_Write_Text("Hello ");
-        LED = 1;
-        delay_ms(500);
-        //while(TXSTAbits.TRMT == 0){}// wait until last tx was send
-        //UART_Write_Text("World\r\n");
-  
-
         char number[6];
-        itoa(number, RF_Read_FIFO(), 10);
+        itoa(number, RF_receive(), 10);
         LCD_send(number, 1, 0);
         
-        
-        
+ 
         if (strcmp(old_Uart_string, UART_STRING) != 0 && UART_buff_pos == (UART_buf_size + 1)){
             LCD_send(UART_STRING, 2, 0);
             UART_Write_Text(UART_STRING);

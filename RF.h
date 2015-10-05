@@ -13,8 +13,9 @@ typedef unsigned int uint;
 #define   SDI       LATDbits.LATD5    
 #define   nSEL      LATDbits.LATD4
 
+#define LED LATAbits.LATA0
 
-// Other values used default of Wirless development suite  (WDS silabs)
+
 
 void RF_Write_bit( uchar value ) {
   SCK=0;
@@ -69,6 +70,7 @@ void RF_Init_RX(void){
 
 
 void RF_Init_RF12(void) {
+  // Other values used default of Wirless development suite  (WDS silabs)
   delay_ms(500);
   WriteCMD(0x80E8); //868 | ENABLE TX Register ON | ENABLE RX FIFO
   WriteCMD(0xA654); // central freq 868.1
@@ -148,6 +150,7 @@ uchar RF_Read_FIFO(void) {
   SCK=0;
   SDI=0;
   nSEL=0;
+  delay_us(1);
   for(i=0;i<16;i++) {  //skip status bits
     SCK=1;
     delay_us(1);
@@ -177,22 +180,21 @@ unsigned char RF_receive(void){
     unsigned char RF_RXBUF[2];
     
     if (RF_Data_Ready() == 1){
-        while(i < 2) {
-            while((RF_Data_Ready() == 1)); // WAIT for next byte
-            RF_RXBUF[i] = RF_Read_FIFO();
-            i= i+1;
-        }
+        LED = 1;
+        RF_RXBUF[0] = RF_Read_FIFO();
+        while((RF_Data_Ready() == 1)); // WAIT for next byte
+        RF_RXBUF[1] = RF_Read_FIFO();    
+
         if (RF_RXBUF[0] == RF_RXBUF[1]){
-            RF_Rst_FIFO(); //Clear FIFO
             return RF_RXBUF[0]; // VALID COMMAND RECEIVED
         }
         else {
-            RF_Rst_FIFO(); //Clear FIFO
             return 0xFF;  // ERROR RECEIVED
         }
+        RF_Rst_FIFO(); //Clear FIFO
+        LED = 0;
     }
     else{
-        RF_Rst_FIFO(); //Clear FIFO
         return 0x00;  // NOTHING RECEIVED
     }
 }
@@ -204,7 +206,7 @@ void RF_transmit(unsigned char address, unsigned char command){
     
     TX_word = address;
     TX_word = TX_word << 4;
-    TX_word = (TX_word & 0xF0) & (command & 0x0F);
+    TX_word = TX_word | (command & 0x0F);
     
     RF_Init_TX();
     RF_WriteFSKbyte( 0xAA );

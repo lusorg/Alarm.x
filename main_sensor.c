@@ -93,9 +93,16 @@ main() {
     
     
     while(1){
-        LED_send();
-        RF_transmit(0,1);
-        delay_ms(2000);
+        LED_0 = 0;
+        LED_1 = 0;
+        LED_2 = 0;
+        LED_3 = 0;
+        RF_transmit(0b1,0b1000);
+        LED_0 = 1;
+        LED_1 = 1;
+        LED_2 = 1;
+        LED_3 = 1;
+        delay_ms(5000);
     }
     
 }
