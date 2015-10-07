@@ -15,6 +15,8 @@ typedef unsigned int uint;
 
 #define LED LATAbits.LATA0
 
+unsigned char RF_RXBUF[2];
+
 
 
 void RF_Write_bit( uchar value ) {
@@ -170,6 +172,7 @@ uchar RF_Read_FIFO(void) {
     delay_us(1);
   }
   nSEL=1;
+  delay_us(1);
   return(Result);
 } 
 
@@ -177,22 +180,28 @@ uchar RF_Read_FIFO(void) {
 unsigned char RF_receive(void){
     
     unsigned char i = 0;
-    unsigned char RF_RXBUF[2];
+    unsigned char cnt = 0;
+    
     
     if (RF_Data_Ready() == 1){
         LED = 1;
-        RF_RXBUF[0] = RF_Read_FIFO();
-        while((RF_Data_Ready() == 1)); // WAIT for next byte
-        RF_RXBUF[1] = RF_Read_FIFO();    
+        while(RF_Data_Ready() == 1){
+            RF_RXBUF[cnt] = RF_Read_FIFO();
+            cnt=cnt+1;
+            if (cnt == 2)
+                RF_Rst_FIFO();
+        }
 
         if (RF_RXBUF[0] == RF_RXBUF[1]){
+            LED = 0;
+            RF_Rst_FIFO(); //Clear FIFO
             return RF_RXBUF[0]; // VALID COMMAND RECEIVED
         }
         else {
+            LED = 0;
+            RF_Rst_FIFO(); //Clear FIFO
             return 0xFF;  // ERROR RECEIVED
-        }
-        RF_Rst_FIFO(); //Clear FIFO
-        LED = 0;
+        }        
     }
     else{
         return 0x00;  // NOTHING RECEIVED
@@ -200,13 +209,14 @@ unsigned char RF_receive(void){
 }
 
 
-void RF_transmit(unsigned char address, unsigned char command){
+void RF_transmit(/*unsigned char address, */unsigned char command){
     
     unsigned char TX_word;
     
-    TX_word = address;
-    TX_word = TX_word << 4;
-    TX_word = TX_word | (command & 0x0F);
+    TX_word = command;
+    //TX_word = address;
+    //TX_word = TX_word << 4;
+    //TX_word = TX_word | (command & 0x0F);
     
     RF_Init_TX();
     RF_WriteFSKbyte( 0xAA );

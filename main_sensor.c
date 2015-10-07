@@ -91,13 +91,14 @@ main() {
     RF_Init_RF12(); // configure RF module
     
     
-    
+    unsigned char counter = 0;
     while(1){
+        counter = counter +1;
         LED_0 = 0;
         LED_1 = 0;
         LED_2 = 0;
         LED_3 = 0;
-        RF_transmit(0b1,0b1000);
+        RF_transmit(counter);
         LED_0 = 1;
         LED_1 = 1;
         LED_2 = 1;

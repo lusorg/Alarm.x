@@ -30,6 +30,7 @@
 
 
 
+
 main() {
     
     WDTCONbits.SWDTEN = 0; //turn off watch dog timer
@@ -72,9 +73,16 @@ main() {
 
     while(1){
         
-        char number[6];
-        itoa(number, RF_receive(), 10);
-        LCD_send(number, 1, 0);
+        char number[7];
+        unsigned char rx_value;
+        if (RF_Data_Ready() == 1){
+            rx_value = RF_receive();
+            
+            if(rx_value != 0){
+                itoa(number, rx_value, 10);
+                LCD_send(number, 1, 1);
+            }
+        }
         
  
         if (strcmp(old_Uart_string, UART_STRING) != 0 && UART_buff_pos == (UART_buf_size + 1)){
