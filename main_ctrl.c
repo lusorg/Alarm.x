@@ -75,16 +75,14 @@ main() {
         
         char number[7];
         unsigned char rx_value;
-        if (RF_Data_Ready() == 1){
-            rx_value = RF_receive();
-            
-            if(rx_value != 0){
-                itoa(number, rx_value, 10);
-                LCD_send(number, 1, 1);
-            }
-        }
         
- 
+        rx_value = RF_receive();
+            
+        itoa(number, RF_RXBUF[0], 10);
+        LCD_send(number, 0, 1);
+        LCD_send("-", 0, 0);
+        LCD_send(number, 0, 0);
+      
         if (strcmp(old_Uart_string, UART_STRING) != 0 && UART_buff_pos == (UART_buf_size + 1)){
             LCD_send(UART_STRING, 2, 0);
             UART_Write_Text(UART_STRING);
