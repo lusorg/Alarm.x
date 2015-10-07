@@ -1,4 +1,7 @@
 
+#include "delay.h"
+
+
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -50,24 +53,27 @@ void WriteCMD( uint CMD ){
 
 void RF_Rst_FIFO(void){
   WriteCMD(0xCA81);
-  delay_us(1);
+  delay_ms(1);
   WriteCMD(0xCA83);
-  delay_us(1);
+  delay_ms(1);
 }
 
 
 void RF_Init_TX(void){
   WriteCMD(0x8238); // transmiter ON | synthesizer ON | oscilator ON | receiver OFF | receiver baseband OFF
+  delay_ms(50);
 }
 
 void RF_Stop_TX(void){
   WriteCMD(0x8208); // transmiter OFF | synthesizer OFF | oscilator ON | receiver OFF | receiver baseband OFF
-  delay_ms(1);
+  delay_ms(50);
 }
 
 void RF_Init_RX(void){
   WriteCMD(0x82D8); // transmiter OFF | synthesizer ON | oscilator ON | receiver ON | receiver baseband ON
+  delay_ms(50);
   RF_Rst_FIFO();
+  delay_ms(50);
 }
 
 
@@ -87,7 +93,7 @@ void RF_Init_RF12(void) {
   WriteCMD(0xC2AC); // auto || digital LPF
   WriteCMD(0xCED4);
   RF_Rst_FIFO();
-  delay_ms(1);
+  delay_ms(50);
   RF_Init_RX();
 }
 
@@ -179,59 +185,50 @@ uchar RF_Read_FIFO(void) {
 
 unsigned char RF_receive(void){
     
-    unsigned char i = 0;
-    unsigned char cnt = 0;
+    unsigned char i              = 0;
+    bit           value_detected = 0;
     
-    
-    if (RF_Data_Ready() == 1){
+    while(RF_Data_Ready()== 1){
         LED = 1;
-        while(RF_Data_Ready() == 1){
-            RF_RXBUF[cnt] = RF_Read_FIFO();
-            cnt=cnt+1;
-            if (cnt == 2)
-                RF_Rst_FIFO();
+        value_detected = 1;
+        RF_RXBUF[i] = RF_Read_FIFO();
+        i=i+1;
+        if (i == 2){
+            RF_Rst_FIFO();
         }
-
-        if (RF_RXBUF[0] == RF_RXBUF[1]){
-            LED = 0;
-            RF_Rst_FIFO(); //Clear FIFO
-            return RF_RXBUF[0]; // VALID COMMAND RECEIVED
-        }
-        else {
-            LED = 0;
-            RF_Rst_FIFO(); //Clear FIFO
-            return 0xFF;  // ERROR RECEIVED
-        }        
+    }
+    
+    LED = 0;
+    if (value_detected == 0){
+        return 0;
+    }
+    else if (RF_RXBUF[0] == RF_RXBUF[1]){
+        return RF_RXBUF[0];
     }
     else{
-        return 0x00;  // NOTHING RECEIVED
+        return 0xFF;
     }
 }
 
 
 void RF_transmit(/*unsigned char address, */unsigned char command){
     
-    unsigned char TX_word;
-    
-    TX_word = command;
-    //TX_word = address;
-    //TX_word = TX_word << 4;
-    //TX_word = TX_word | (command & 0x0F);
-    
     RF_Init_TX();
+    delay_ms(50);
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0x2D );
     RF_WriteFSKbyte( 0xD4 );
 
-    RF_WriteFSKbyte( TX_word );
-    RF_WriteFSKbyte( TX_word );
+    RF_WriteFSKbyte( command );
+    RF_WriteFSKbyte( command );
 
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );
+    
     RF_Init_RX();
 }

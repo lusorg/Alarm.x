@@ -41,7 +41,7 @@ void LCD_send_data_byte(unsigned char byte)
 void LCD_send(unsigned char *text, char line, char clear_line )
 {
     int n;
-    if (line == 1)
+    if (line == 0)
         LCD_send_command_byte(0x02); // go back
     else
         LCD_send_command_byte(0xC0); // go back
