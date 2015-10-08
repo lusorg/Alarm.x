@@ -50,7 +50,7 @@ void LCD_send(unsigned char *text, char line, char clear_line )
     if (clear_line == 0b1){
         for (n=0 ; n < 16 ; ++n)
             LCD_send_data_byte(' ');
-        if (line == 1)
+        if (line == 0)
             LCD_send_command_byte(0x02); // go back
         else
             LCD_send_command_byte(0xC0); // go back
@@ -69,8 +69,10 @@ void LCD_send(unsigned char *text, char line, char clear_line )
 
 void LCD_Init(){
     
-    TRISD = 0b00000000; // Set RD0-7 as digital outputs
-    
+    TRISDbits.RD3 = 0b0;
+    TRISDbits.RD2 = 0b0;
+    TRISDbits.RD1 = 0b0;
+    TRISDbits.RD0 = 0b0;       
     TRISCbits.RC1 = 0b0;  //LCD_LED
     TRISCbits.RC2 = 0b0;  //LCD_PIN_RS
     TRISCbits.RC3 = 0b0;  //LCD_PIN_E

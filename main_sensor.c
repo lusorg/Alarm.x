@@ -32,6 +32,9 @@
 #define LED_1 LATBbits.LATB1
 #define LED_2 LATBbits.LATB2
 #define LED_3 LATBbits.LATB3
+#define LED   LATAbits.LATA0
+
+#define SENS_0 PORTCbits.RC4
 
 void LED_send(void){
     LED_0 = 0;
@@ -87,23 +90,41 @@ main() {
     TRISBbits.TRISB2 = 0; // RB2 to output
     TRISBbits.TRISB3 = 0; // RB3 to output
     
+    TRISCbits.TRISC4 = 1;   //SENS_0 input
+    
     RF_Init_RF();   // configure ports of RF
     RF_Init_RF12(); // configure RF module
     
     
     unsigned char counter = 0;
     while(1){
-        counter = counter +1;
-        LED_0 = 0;
-        LED_1 = 0;
-        LED_2 = 0;
-        LED_3 = 0;
-        RF_transmit(counter);
-        LED_0 = 1;
-        LED_1 = 1;
-        LED_2 = 1;
-        LED_3 = 1;
-        delay_ms(5000);
+        
+        if(SENS_0 == 1){
+            //counter = counter +1;
+            LED_0 = 0;
+            LED_1 = 0;
+            LED_2 = 0;
+            LED_3 = 0;
+            RF_transmit(0b01000001);
+            LED_0 = 1;
+            LED_1 = 1;
+            LED_2 = 1;
+            LED_3 = 1;
+            while(SENS_0 == 1);
+        }
+        else{
+            LED_0 = 0;
+            LED_1 = 0;
+            LED_2 = 0;
+            LED_3 = 0;
+            RF_transmit(0b01000000);
+            LED_0 = 1;
+            LED_1 = 1;
+            LED_2 = 1;
+            LED_3 = 1;
+            while(SENS_0 == 0);
+
+        }
     }
     
 }

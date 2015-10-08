@@ -13,22 +13,19 @@
 #include <xc.h>
 #include <string.h>
 
-
-#include "./configBit.h"
 #include "./delay.h"
+#include "./configBit.h"
 #include "./lcd.h"
 #include "./uart.h"
 #include "./RF.h"
 
-
+#define   ALARM      LATBbits.LATB4
 /*
  * 
  * TRIS register (data direction register)
  * PORT register (reads the levels on the pins of the device)
  * LAT register (output latch)
  */
-
-
 
 
 main() {
@@ -50,6 +47,9 @@ main() {
     INTCONbits.PEIE = 0b1; // periperial interrupt enable
     INTCONbits.GIE  = 0b1; // Global interupt enable
     
+    // Alarm output 
+    TRISBbits.TRISB4 = 0; // RA0 to output
+    
     
     UART_Init();
     LCD_Init();
@@ -57,34 +57,49 @@ main() {
     RF_Init_RF12(); // configure RF module
     
     // IO ports
+    
+    ALARM = 1;
     LED = 1;
-    delay_ms(24);
+    delay_ms(50);
     LED = 0;
-    delay_ms(24);
+    delay_ms(50);
     LED = 1;
-    delay_ms(24);
+    delay_ms(50);
     LED = 0;
-    delay_ms(24);
+    delay_ms(50);
     LED = 1;
-    delay_ms(24);
+    delay_ms(50);
     LED = 0;
-    delay_ms(24);
-
+    delay_ms(50);
+    ALARM = 0;
 
     while(1){
         
         char number[7];
         unsigned char rx_value;
         
+        
         rx_value = RF_receive();
-            
-        itoa(number, RF_RXBUF[0], 10);
-        LCD_send(number, 0, 1);
-        LCD_send("-", 0, 0);
-        LCD_send(number, 0, 0);
+        
+        if(rx_value != 0){
+            //itoa(number, rx_value, 10);
+            //LCD_send(number, 0, 1);
+            if (rx_value == 0b01000001){
+                    LCD_send("ALARM!!!", 0, 1);
+                    ALARM = 1;
+                    delay_ms(300);
+                    ALARM = 0;
+            }
+            if (rx_value == 0b01000000){
+                    LCD_send("OK", 0, 1);
+                    ALARM = 0;
+            }
+
+        }
+
       
         if (strcmp(old_Uart_string, UART_STRING) != 0 && UART_buff_pos == (UART_buf_size + 1)){
-            LCD_send(UART_STRING, 2, 0);
+            LCD_send(UART_STRING, 1, 1);
             UART_Write_Text(UART_STRING);
             strcpy(old_Uart_string, UART_STRING);
         }

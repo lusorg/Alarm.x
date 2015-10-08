@@ -3,7 +3,32 @@
  * Author: cardias
  *
  * Created on September 18, 2015, 5:22 PM
- */
+ 
+
+    ----------------------------   
+   -| 1                     40 |-     
+RA0-| 2 LED                 39 |-   
+   -| 3                     38 |-   
+   -| 4               ALARM 37 |-RB4    
+   -| 5               LED_3 36 |-RB3   
+   -| 6               LED_2 35 |-RB2   
+   -| 7               LED_1 34 |-RB1   
+   -| 8               LED_0 33 |-RB0   
+   -| 9                     32 |-VDD    
+   -| 10                    31 |-VSS    
+VDD-| 11               SDO  30 |-RD7   
+VSS-| 12               SCK  29 |-RD6   
+   -| 13               SDI  28 |-RD5   
+   -| 14               nSEL 27 |-RD4   
+   -| 15                 RX 26 |-RC7   
+RC1-| 16 LCD_LED         TX 25 |-RC6   
+RC2-| 17 LCD_PIN_RS   SEN_1 24 |-RC5   
+RC3-| 18 LCD_PIN_E    SEN_0 23 |-RC4   
+RD0-| 19 LCD_D4      LCD_D7 22 |-RD3    
+RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
+     --------------------------
+     
+*/
 
 // PIC18F4520 Configuration Bit Settings
 
