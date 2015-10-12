@@ -29,6 +29,33 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
      --------------------------
      
 */
+/*
+ * SAD(Sensor adress) 0b210
+ * 
+ */
+
+/*CONTROLER MSG
+ * 0b76543210 | ( bit format )
+ * 0bSAD00001 | request status 
+ * 0bSAD00010 | disable buzzer and Alarm 
+ * 0bSAD00011 | enable buzzer
+ * 
+ * 
+ */
+
+
+
+
+/*SENSOR MSG
+ * 
+ * 0b76543210  | ( bit format )
+ * 0bSAD00001  | alarm enabled   
+ * 0bSAD00010  | ok state   
+ * 
+ * 
+ * 
+ * 
+ */
 
 // PIC18F4520 Configuration Bit Settings
 

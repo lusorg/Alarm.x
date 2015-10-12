@@ -5,36 +5,18 @@
  * Created on September 14, 2015, 10:41 PM
  */
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pic18f4520.h>
 #include <xc.h>
 #include <string.h>
 
-
-#include "./configBit.h"
 #include "./delay.h"
+#include "./configBit.h"
 #include "./RF.h"
-//#include "./lcd.h"
-//#include "./uart.h"
 
+#include "./defines.h"
 
-/*
- * 
- * TRIS register (data direction register)
- * PORT register (reads the levels on the pins of the device)
- * LAT register (output latch)
- */
-
-#define LED_0 LATBbits.LATB0
-#define LED_1 LATBbits.LATB1
-#define LED_2 LATBbits.LATB2
-#define LED_3 LATBbits.LATB3
-#define LED   LATAbits.LATA0
-
-#define SENS_0 PORTCbits.RC4
 
 void LED_send(void){
     LED_0 = 0;
@@ -76,8 +58,6 @@ void LED_send(void){
  }
 
 
-
-
 main() {
     
     WDTCONbits.SWDTEN = 0; //turn off watch dog timer
@@ -92,39 +72,35 @@ main() {
     
     TRISCbits.TRISC4 = 1;   //SENS_0 input
     
+    // Alarm output 
+    TRISBbits.TRISB4 = 0; // RA0 to output
+    
     RF_Init_RF();   // configure ports of RF
     RF_Init_RF12(); // configure RF module
     
     
     unsigned char counter = 0;
+    unsigned char Alarm_state =0;
+    unsigned char rx_value = 0;
     while(1){
-        
+        ALARM = Alarm_state;            
         if(SENS_0 == 1){
-            //counter = counter +1;
-            LED_0 = 0;
-            LED_1 = 0;
-            LED_2 = 0;
-            LED_3 = 0;
-            RF_transmit(0b01000001);
-            LED_0 = 1;
-            LED_1 = 1;
-            LED_2 = 1;
-            LED_3 = 1;
-            while(SENS_0 == 1);
+            Alarm_state = 1;
         }
-        else{
-            LED_0 = 0;
-            LED_1 = 0;
-            LED_2 = 0;
-            LED_3 = 0;
-            RF_transmit(0b01000000);
-            LED_0 = 1;
-            LED_1 = 1;
-            LED_2 = 1;
-            LED_3 = 1;
-            while(SENS_0 == 0);
-
+           
+        rx_value = RF_receive();
+        if(rx_value == 0b00100001){ // CONTROLER REQUESTING STATUS
+            if (Alarm_state == 1){
+                RF_transmit(0b00100001);
+            }
+            else{
+                RF_transmit(0b00100010);
+            }        
         }
+        else if (rx_value == 0b00100010){ // CONTROLER REQUESTING to Disable Alarm
+            Alarm_state = 0;
+        }
+        
     }
     
 }

@@ -202,7 +202,7 @@ unsigned char RF_receive(void){
         }
     }
     else{
-        return 0;
+        return 0;  // no data to receive
     }
 }
 
