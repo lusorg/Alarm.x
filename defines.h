@@ -13,5 +13,3 @@
 #define SENS_0 PORTCbits.RC4
 
 #define ALARM  LATBbits.LATB4
-
-#define   ALARM      LATBbits.LATB4

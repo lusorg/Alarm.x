@@ -36,21 +36,19 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 
 /*CONTROLER MSG
  * 0b76543210 | ( bit format )
- * 0bSAD00001 | request status 
- * 0bSAD00010 | disable buzzer and Alarm 
- * 0bSAD00011 | enable buzzer
+ * 0bS0000001 | request status 
+ * 0bS0000010 | disable buzzer and Alarm 
+ * 0bS0000011 | enable buzzer
  * 
  * 
  */
 
 
-
-
 /*SENSOR MSG
  * 
  * 0b76543210  | ( bit format )
- * 0bSAD00001  | alarm enabled   
- * 0bSAD00010  | ok state   
+ * 0b00000001  | alarm enabled   
+ * 0b10101010  | ok state   
  * 
  * 
  * 
