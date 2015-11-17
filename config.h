@@ -28,32 +28,23 @@ RD0-| 19 LCD_D4      LCD_D7 22 |-RD3
 RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
      --------------------------
      
-*/
-/*
- * SAD(Sensor adress) 0b210
- * 
- */
 
 /*CONTROLER MSG
- * 0b76543210 | ( bit format )
- * 0bS0000001 | request status 
- * 0bS0000010 | disable buzzer and Alarm 
- * 0bS0000011 | enable buzzer
- * 
- * 
+ * code    | Definition
+ *    1    | request status 
+ *    2    | disable Alarm 
+ *    3    | enable Alarm by request
  */
 
-
-/*SENSOR MSG
- * 
- * 0b76543210  | ( bit format )
- * 0b00000001  | alarm enabled   
- * 0b10101010  | ok state   
- * 
- * 
- * 
- * 
- */
+//Sensor MSG
+    /* Alarm_state  | DEFINITION
+     *              |
+     *      1       |    Alarm clear 
+     *      2       |    Alarmed by local sensor
+     *      3       |    Alarmed by local sensor, sound timeout
+     *      4       |    Alarmed by request (request from controller)
+     *      5       |    Alarmed by request, sound timeout
+     */ 
 
 // PIC18F4520 Configuration Bit Settings
 
@@ -117,3 +108,68 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 // CONFIG7H
 #pragma config EBTRB = OFF      // Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
 
+
+
+/*
+ * 
+ * TRIS register (data direction register)
+ * PORT register (reads the levels on the pins of the device)
+ * LAT register (output latch)
+ */
+#define LED_0 LATBbits.LATB0
+#define LED_1 LATBbits.LATB1
+#define LED_2 LATBbits.LATB2
+#define LED_3 LATBbits.LATB3
+#define LED   LATAbits.LATA0
+
+#define SENS_0 PORTCbits.RC4
+
+#define ALARM  LATBbits.LATB4
+
+#define LCD_LED     LATCbits.LATC1
+#define LCD_PIN_RS  LATCbits.LATC2
+#define LCD_PIN_E   LATCbits.LATC3
+
+
+//INPUTS
+#define   SDO       PORTDbits.RD7
+
+//OUTPUTS
+#define   SCK       LATDbits.LATD6    
+#define   SDI       LATDbits.LATD5    
+#define   nSEL      LATDbits.LATD4
+
+unsigned char RF_RXBUF[8];
+#define UART_buf_size  128
+char  UART_buffer[UART_buf_size]="--------------------------------------------------------------------------------------------------------------------------------";
+
+
+void System_startup(){
+    
+    WDTCONbits.SWDTEN = 0; //turn off watch dog timer
+    
+    OSCCONbits.IRCF   = 0b111; //Set to 8MHZ
+    OSCTUNEbits.PLLEN = 0b1;   //Enable PLL
+   
+    TRISAbits.TRISA0 = 0; // RA0 to output
+    ADCON1bits.PCFG0 = 0b1;  // set to ANALOG OFF
+    ADCON1bits.PCFG1 = 0b1;  // set to ANALOG OFF
+    ADCON1bits.PCFG2 = 0b1;  // set to ANALOG OFF
+    ADCON1bits.PCFG3 = 0b1;  // set to ANALOG OFF
+   
+    TRISBbits.TRISB0 = 0; // RB0 to output
+    TRISBbits.TRISB1 = 0; // RB1 to output
+    TRISBbits.TRISB2 = 0; // RB2 to output
+    TRISBbits.TRISB3 = 0; // RB3 to output
+    
+    TRISCbits.TRISC4 = 1;   //SENS_0 input
+    
+    // Alarm output 
+    TRISBbits.TRISB4 = 0; // RA0 to output
+    
+    // Enable interrupt
+    PIE1bits.RCIE   = 0b1; // uart receive interupt
+    INTCONbits.PEIE = 0b1; // periperial interrupt enable
+    INTCONbits.GIE  = 0b1; // Global interupt enable
+ 
+}

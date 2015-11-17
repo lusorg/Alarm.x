@@ -15,14 +15,11 @@ unsigned char Dev_Address = 0x01;
 #include <xc.h>
 #include <string.h>
 
-#include "./defines.h"
+#include "./config.h"
 #include "./delay.h"
-#include "./configBit.h"
 #include "./lcd.h"
 #include "./uart_GSM.h"
 #include "./RF.h"
-
-
 
 unsigned char Send_Message(unsigned char addr, unsigned char msg){
     
@@ -84,34 +81,9 @@ unsigned char Send_Message(unsigned char addr, unsigned char msg){
 
 main() {
     
-    WDTCONbits.SWDTEN = 0; //turn off watch dog timer
-    
-    OSCCONbits.IRCF   = 0b111; //Set to 8MHZ
-    OSCTUNEbits.PLLEN = 0b1;   //Enable PLL
-   
-    TRISAbits.TRISA0 = 0; // RA0 to output
-    ADCON1bits.PCFG0 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG1 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG2 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG3 = 0b1;  // set to ANALOG OFF
-   
-    TRISBbits.TRISB0 = 0; // RB0 to output
-    TRISBbits.TRISB1 = 0; // RB1 to output
-    TRISBbits.TRISB2 = 0; // RB2 to output
-    TRISBbits.TRISB3 = 0; // RB3 to output
-    
-    TRISCbits.TRISC4 = 1;   //SENS_0 input
-    
-    // Alarm output 
-    TRISBbits.TRISB4 = 0; // RA0 to output
-    
-    // Enable interrupt
-    PIE1bits.RCIE   = 0b1; // uart receive interupt
-    INTCONbits.PEIE = 0b1; // periperial interrupt enable
-    INTCONbits.GIE  = 0b1; // Global interupt enable
-    
+    System_startup();
     LCD_Init();
-    RF_Init_RF();   // configure ports of RF
+    RF_Init_RF(); 
     UART_Init();
     
     unsigned char sensor_state = 0x55;
@@ -142,9 +114,25 @@ main() {
 
         LCD_send("delay to ask",0,1);
         LCD_send("sensor status",1,1);
-        delay_ms(5000);  
-        sensor_state = Send_Message(0x02,0x01);
+        delay_ms(5000);
         
+        //Sensor MSG
+        /* Alarm_state  | DEFINITION
+        *              |
+        *      1       |    Alarm clear 
+        *      2       |    Alarmed by local sensor
+        *      3       |    Alarmed by local sensor, sound timeout
+        *      4       |    Alarmed by request (request from controller)
+        *      5       |    Alarmed by request, sound timeout
+        */ 
+        sensor_state = Send_Message(0x02, 1);
+             
+        /*CONTROLER MSG
+        * code    | Definition
+        *    1    | request status 
+        *    2    | disable Alarm 
+        *    3    | enable Alarm by request
+        */
         if(sensor_state == 0x01){
             ALARM = 0b1;
             SMS_send("INTRUTION DETECTED !!! Alarm Detected on sensor 1");
