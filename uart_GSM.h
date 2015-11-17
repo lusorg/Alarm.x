@@ -83,9 +83,7 @@
      delay_ms(500);
      UART_Write_Text("AT+CMGD=10\r");
      delay_ms(500);
-
  }
-  
   
   
   void UART_clean_buffer(){

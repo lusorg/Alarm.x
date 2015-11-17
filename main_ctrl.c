@@ -86,21 +86,18 @@ main() {
     RF_Init_RF(); 
     UART_Init();
     
-    unsigned char sensor_state = 0x55;
+    unsigned char sensor_state = 0x00;
     
     SMS_delete();
+    LCD_send("Hello World",0,1);
     LCD_send("GSM WAIT",1,1);
     delay_s(20);
     SMS_delete();
     delay_s(20);
-    LCD_send("send msg",1,1);
-    
-    
-    
+    LCD_send("SMS Power On",0,1);
     SMS_send("Alarm Power On");
     SMS_delete();
     
-
     while(1){
         if(strstr(UART_buffer,"+CMTI: \"SM\"") != NULL){
             UART_clean_buffer();
@@ -112,7 +109,7 @@ main() {
              SMS_delete();
          }
 
-        LCD_send("delay to ask",0,1);
+        LCD_send("Ask Waiting",0,1);
         LCD_send("sensor status",1,1);
         delay_ms(5000);
         
@@ -137,7 +134,7 @@ main() {
             ALARM = 0b1;
             SMS_send("INTRUTION DETECTED !!! Alarm Detected on sensor 1");
             LCD_send("ALARM on sensor 1",0,1);
-            LCD_send("Reset on 2sec",1,1);
+            LCD_send("Wait for disarm",1,1);
 
             sms_loop:    
             while(strstr(UART_buffer,"+CMTI: \"SM\"") == NULL);
@@ -146,42 +143,18 @@ main() {
             if(strstr(UART_buffer,"Off") != NULL){
                 UART_clean_buffer();
                 SMS_delete();
-
                 ALARM = 0b0;
                 sensor_state = Send_Message(0x02,0x02);  // RESET sensor state
                 SMS_send("Alarm disabled");
             }
             else{
+                SMS_send("Unknown SMS received, please retry");
+                SMS_delete();
                 goto sms_loop;
             }
         }
-    }
- /*
-    
-    int counter = 0;
-    while(1){
-        counter = counter +1;
-        if(counter == 100){
-            SMS_read();
-            delay_s(1);
-            if(strstr(UART_buffer,"off") != NULL){
-                LCD_send("       FOUND    ",1,0);
-            }
-            else{
-                LCD_send("   NOT FOUND    ",1,0);
-            }
-            SMS_delete();
-            counter = 0;
-        }
-               
-        LCD_send(UART_buffer,0,0);
-        
-
-    }
-  */
-    
-    
-}
+    }//while 1
+}//Main
 
 
 
