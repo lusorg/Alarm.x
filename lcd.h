@@ -5,9 +5,7 @@
  * Created on September 18, 2015, 5:16 PM
  */
 
-#define LCD_LED     LATCbits.LATC1
-#define LCD_PIN_RS  LATCbits.LATC2
-#define LCD_PIN_E   LATCbits.LATC3
+
 
 void LCD_send_nibble(unsigned char nibble)
 {

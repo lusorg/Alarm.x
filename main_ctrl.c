@@ -6,6 +6,8 @@
  */
 
 
+unsigned char Dev_Address = 0x01;
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,21 +15,19 @@
 #include <xc.h>
 #include <string.h>
 
+#include "./defines.h"
 #include "./delay.h"
 #include "./configBit.h"
 #include "./lcd.h"
-#include "./uart.h"
-
-unsigned char Dev_Address = 0x01;
+#include "./uart_GSM.h"
 #include "./RF.h"
 
-#include "./defines.h"
 
 
 unsigned char Send_Message(unsigned char addr, unsigned char msg){
     
     // LCD integer to string
-    char number[7];
+    char number[8];
     
     unsigned long wait_rx_cnt    = 0;
     unsigned long wait_rx_max    = 100000;
@@ -35,17 +35,24 @@ unsigned char Send_Message(unsigned char addr, unsigned char msg){
     unsigned char tx_retries_cnt = 0;
     unsigned char rx_value       = 0;
     
-    LCD_send("TX delay",0,1);
-    delay_ms(1000);
-    
     transmit:
+    LCD_send("TX delay retry:",0,1);
+    itoa(number,tx_retries_cnt,10);
+    LCD_send(number,1,1);
+    delay_ms(1000);
     
     // CHECK RE-TRANSMIT ZONE
     tx_retries_cnt = tx_retries_cnt + 1;
-    if (tx_retries_cnt > tx_retries_max)
+    if (tx_retries_cnt > tx_retries_max){
+        LCD_send("FAILED TO COM",0,1);
+        LCD_send("FAILED TO COM",1,1);
+        delay_ms(5000);
         return 0xFF;   // FAILED TO COMUNICATE WITH SENSOR
-
+    }
     LCD_send("Transmitting",0,1);
+    LCD_send("Transmitting",1,1);
+    
+    
     RF_transmit(addr,msg); // Request sensor
    
     // reset actual read status
@@ -53,6 +60,7 @@ unsigned char Send_Message(unsigned char addr, unsigned char msg){
     wait_rx_cnt = 0;
     
     LCD_send("WAIT Rx",0,1);
+    LCD_send("WAIT Rx",1,1);
     
     while (rx_value == 0x00 &&  wait_rx_cnt < wait_rx_max){
         wait_rx_cnt = wait_rx_cnt + 1;
@@ -61,15 +69,15 @@ unsigned char Send_Message(unsigned char addr, unsigned char msg){
     
     if ((rx_value == 0xFF) || (rx_value == 0x00)) {  // bad RECEPTION or nothing received
         delay_ms(500);
+        LCD_send("TIMEOUT",0,1);
+        LCD_send("TIMEOUT",1,1);    
         goto transmit;
     }
-    
+        
+    LCD_send("Value to send:",0,1);
     itoa(number,rx_value,10);
-    LCD_send("Value:",0,1);
     LCD_send(number,1,1);
-    delay_ms(500);
-    LCD_send("Empty",1,1);
-    
+    delay_ms(100);
     
     return rx_value;
 }
@@ -104,30 +112,87 @@ main() {
     
     LCD_Init();
     RF_Init_RF();   // configure ports of RF
-
     UART_Init();
     
-    unsigned char counter = 0;
-    unsigned char Alarm_state =0;
-    unsigned char sensor_state = 0xAA;
+    unsigned char sensor_state = 0x55;
+    
+    SMS_delete();
+    LCD_send("GSM WAIT",1,1);
+    delay_s(20);
+    SMS_delete();
+    delay_s(20);
+    LCD_send("send msg",1,1);
+    
+    
+    
+    SMS_send("Alarm Power On");
+    SMS_delete();
+    
 
     while(1){
-        
-        while(sensor_state == 0xAA){
-            sensor_state = Send_Message(0x02,0x01);  // requesting sensor state 
-        }
+        if(strstr(UART_buffer,"+CMTI: \"SM\"") != NULL){
+            UART_clean_buffer();
+            SMS_read();
+         }
+         if(strstr(UART_buffer,"Hello") != NULL){
+             SMS_send("Yes I am ALive");
+             UART_clean_buffer();
+             SMS_delete();
+         }
+
+        LCD_send("delay to ask",0,1);
+        LCD_send("sensor status",1,1);
+        delay_ms(5000);  
+        sensor_state = Send_Message(0x02,0x01);
         
         if(sensor_state == 0x01){
             ALARM = 0b1;
-            LCD_send("ALARM ON SENSOR",0,1);
-            LCD_send("Reset on 5sec",0,1);
-            delay_ms(5000);
-            sensor_state = Send_Message(0x02,0x02);  // reset sensor state
+            SMS_send("INTRUTION DETECTED !!! Alarm Detected on sensor 1");
+            LCD_send("ALARM on sensor 1",0,1);
+            LCD_send("Reset on 2sec",1,1);
+
+            sms_loop:    
+            while(strstr(UART_buffer,"+CMTI: \"SM\"") == NULL);
+            UART_clean_buffer();
+            SMS_read();
+            if(strstr(UART_buffer,"Off") != NULL){
+                UART_clean_buffer();
+                SMS_delete();
+
+                ALARM = 0b0;
+                sensor_state = Send_Message(0x02,0x02);  // RESET sensor state
+                SMS_send("Alarm disabled");
+            }
+            else{
+                goto sms_loop;
+            }
         }
+    }
+ /*
+    
+    int counter = 0;
+    while(1){
+        counter = counter +1;
+        if(counter == 100){
+            SMS_read();
+            delay_s(1);
+            if(strstr(UART_buffer,"off") != NULL){
+                LCD_send("       FOUND    ",1,0);
+            }
+            else{
+                LCD_send("   NOT FOUND    ",1,0);
+            }
+            SMS_delete();
+            counter = 0;
+        }
+               
+        LCD_send(UART_buffer,0,0);
         
 
-
     }
+  */
+    
+    
 }
 
 

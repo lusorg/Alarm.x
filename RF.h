@@ -4,18 +4,7 @@ typedef unsigned int uint;
 
 
 
-//INPUTS
-#define   SDO       PORTDbits.RD7
 
-//OUTPUTS
-#define   SCK       LATDbits.LATD6    
-#define   SDI       LATDbits.LATD5    
-#define   nSEL      LATDbits.LATD4
-
-
-#include "./defines.h"
-//#include "delay.h"
-unsigned char RF_RXBUF[8];
 
 
 
@@ -74,7 +63,7 @@ void RF_Init_RF12(void) {
   WriteCMD(0x80E8); //868 | ENABLE TX Register ON | ENABLE RX FIFO
   WriteCMD(0xA654); // central freq 868.1
   WriteCMD(0x94A0); // 135 khz | Fast | LNA MAX POWER | DRSSI -103 | VDI ONN |
-  WriteCMD(0x9857); // fo +df | deviation 90 | Pout -17.5d (minimum) 
+  WriteCMD(0x9850); // fo +df | deviation 90 | Pout -17.5d (minimum) 
   WriteCMD(0xCC77); // crystal low power mode | disbaled pll dithering
   WriteCMD(0xE196); 
   WriteCMD(0xC80E); 
@@ -132,7 +121,7 @@ uchar RF_Data_Ready(void){
 void RF_WriteFSKbyte( uchar DATA ){
   uchar RGIT=0;
   uint temp=0xB800;
-  temp = DATA + temp;
+  temp |= DATA;
   Loop: 
   RGIT = RF_Data_Ready();
   if(RGIT==0) {
@@ -182,13 +171,13 @@ unsigned char RF_receive(void){
         LED = 1;
         LED_1 = 0;
         RF_RXBUF[0] = RF_Read_FIFO();
-        UART_Write_byte(RF_RXBUF[0]);
+        //UART_Write_byte(RF_RXBUF[0]);
         while(RF_Data_Ready() == 0);  // WAITING FOR NEXT BYTE NEED TO PUT A TIMEOUT HERE
         RF_RXBUF[1] = RF_Read_FIFO();
-        UART_Write_byte(RF_RXBUF[1]);
+        //UART_Write_byte(RF_RXBUF[1]);
         while(RF_Data_Ready() == 0);  // WAITING FOR NEXT BYTE NEED TO PUT A TIMEOUT HERE
         RF_RXBUF[2] = RF_Read_FIFO();
-        UART_Write_byte(RF_RXBUF[2]);
+        //UART_Write_byte(RF_RXBUF[2]);
         // OK STATE COM OK AND ADDRESS OK
         if( RF_RXBUF[0] + RF_RXBUF[1] == RF_RXBUF[2] && RF_RXBUF[0] == Dev_Address){
             RF_Rst_FIFO(); //Clear FIFO
@@ -235,11 +224,10 @@ void RF_transmit(unsigned char address, unsigned char command){
 
     // CUT VALU MSB
     
-    
     RF_WriteFSKbyte( address );
     RF_WriteFSKbyte( command );
     RF_WriteFSKbyte( address + command );
-
+    
     
     RF_WriteFSKbyte( 0xAA );
     RF_WriteFSKbyte( 0xAA );

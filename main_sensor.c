@@ -5,6 +5,10 @@
  * Created on September 14, 2015, 10:41 PM
  */
 
+#define UART_buf_size  16
+unsigned char Dev_Address = 0x02;
+char  UART_buffer[UART_buf_size]; //16 char buffers
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pic18f4520.h>
@@ -14,9 +18,8 @@
 #include "./delay.h"
 #include "./configBit.h"
 #include "./lcd.h"
-#include "./uart.h"
+#include "./uart_GSM.h"
 
-unsigned char Dev_Address = 0x02;
 #include "./RF.h"
 
 #include "./defines.h"
@@ -65,7 +68,7 @@ main() {
     unsigned char timeout_cnt = 0;
     unsigned char iii = 0;
     
-    
+    delay_s(5);
     
     while(1){
         LED_2 = ~SENS_0;
@@ -80,20 +83,22 @@ main() {
         if(rx_value != 0){
             if(rx_value == 0b00000001){ // ASKING STATE
                 delay_ms(1000);
-                if(Alarm_state == 1)
+                if(Alarm_state == 1){
                     RF_transmit(0x01,Alarm_state);
-                else
-                    RF_transmit(0x01,0b10101010);
+                }
+                else{
+                    RF_transmit(0x01,0x55);
+                }
             }
-            else if(rx_value == 0b00000010){ // Reset alarm state
+            else if(rx_value == 0x02){ // Reset alarm state
                 Alarm_state = 0b0;
                 delay_ms(1000);
-                RF_transmit(0x01,0b10101010);
+                RF_transmit(0x01,0x55);
             }
-            else if(rx_value == 0b00000011){ // ENABLE alarm state
+            else if(rx_value == 0x03){ // ENABLE alarm state
                 Alarm_state = 0b1;
                 delay_ms(1000);
-                RF_transmit(0x01,0b10101010);
+                RF_transmit(0x01,0x55);
             }
 
         }

@@ -13,3 +13,22 @@
 #define SENS_0 PORTCbits.RC4
 
 #define ALARM  LATBbits.LATB4
+
+#define LCD_LED     LATCbits.LATC1
+#define LCD_PIN_RS  LATCbits.LATC2
+#define LCD_PIN_E   LATCbits.LATC3
+
+#define UART_buf_size  128
+//INPUTS
+#define   SDO       PORTDbits.RD7
+
+//OUTPUTS
+#define   SCK       LATDbits.LATD6    
+#define   SDI       LATDbits.LATD5    
+#define   nSEL      LATDbits.LATD4
+
+unsigned char RF_RXBUF[8];
+
+
+char  UART_buffer[UART_buf_size] = "--------------------------------------------------------------------------------------------------------------------------------"; //16 char buffers
+
