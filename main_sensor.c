@@ -28,9 +28,9 @@ main() {
     unsigned int  timeout_cycle = 0;  //Counter to be used in the buzzer timeout
     
     System_startup();
-    LCD_Init();
+    //LCD_Init();
     RF_Init_RF(); 
-    UART_Init();
+    //UART_Init();
 
 
     blink_led:
@@ -146,7 +146,7 @@ main() {
                 timeout_cycle = 0; // Reset Timeout
             }
             else if(rx_value == 10){ // Sensor OFF
-                sensor_state = 10; //Alarmed by request (request from controller)
+                sensor_state = 10; // Sensor OFF)
             }
             delay_s(1);  // Wait other side ready 
             RF_transmit(0x01,sensor_state);

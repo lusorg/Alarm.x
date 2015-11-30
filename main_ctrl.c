@@ -6,6 +6,7 @@
  */
 
 unsigned char Dev_Address = 0x01;
+char number[8];
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,8 +23,7 @@ unsigned char Dev_Address = 0x01;
 unsigned char Send_Message(unsigned char addr, unsigned char msg) {
 
     // LCD integer to string
-    char number[8];
-
+    
     unsigned long wait_rx_cnt = 0;
     unsigned long wait_rx_max = 100000;
     unsigned char tx_retries_max = 3;
@@ -31,21 +31,21 @@ unsigned char Send_Message(unsigned char addr, unsigned char msg) {
     unsigned char rx_value = 0;
 
 transmit:
-    LCD_send("TX delay retry:", 0, 1);
-    itoa(number, tx_retries_cnt, 10);
-    LCD_send(number, 1, 1);
+    //LCD_send("TX delay retry:", 0, 1);
+    //itoa(number, tx_retries_cnt, 10);
+    //LCD_send(number, 1, 1);
     delay_ms(1000);
 
     // CHECK RE-TRANSMIT ZONE
     tx_retries_cnt = tx_retries_cnt + 1;
     if (tx_retries_cnt > tx_retries_max) {
-        LCD_send("FAILED TO COM", 0, 1);
-        LCD_send("FAILED TO COM", 1, 1);
+        //LCD_send("FAILED TO COM", 0, 1);
+        //LCD_send("FAILED TO COM", 1, 1);
         delay_ms(200);
         return 0xFF; // FAILED TO COMUNICATE WITH SENSOR
     }
-    LCD_send("Transmitting", 0, 1);
-    LCD_send("Transmitting", 1, 1);
+    //LCD_send("Transmitting", 0, 1);
+    //LCD_send("Transmitting", 1, 1);
 
 
     RF_transmit(addr, msg); // Request sensor
@@ -54,8 +54,8 @@ transmit:
     rx_value = 0x00;
     wait_rx_cnt = 0;
 
-    LCD_send("WAIT Rx", 0, 1);
-    LCD_send("WAIT Rx", 1, 1);
+    //LCD_send("WAIT Rx", 0, 1);
+    //LCD_send("WAIT Rx", 1, 1);
 
     while (rx_value == 0x00 && wait_rx_cnt < wait_rx_max) {
         wait_rx_cnt = wait_rx_cnt + 1;
@@ -64,14 +64,14 @@ transmit:
 
     if ((rx_value == 0xFF) || (rx_value == 0x00)) { // bad RECEPTION or nothing received
         delay_ms(200);
-        LCD_send("TIMEOUT", 0, 1);
-        LCD_send("TIMEOUT", 1, 1);
+        //LCD_send("TIMEOUT", 0, 1);
+        //LCD_send("TIMEOUT", 1, 1);
         goto transmit;
     }
 
-    LCD_send("Rx of RF", 0, 1);
-    itoa(number, rx_value, 10);
-    LCD_send(number, 1, 1);
+    //LCD_send("Rx of RF", 0, 1);
+    //itoa(number, rx_value, 10);
+    //LCD_send(number, 1, 1);
     delay_ms(100);
 
     return rx_value;
@@ -157,28 +157,42 @@ main() {
         
         if (strstr(UART_buffer, "+CMTI: \"SM\"") != NULL) {
             SMS_read();
+            ///////////////////////////////////////////////////////////////////
             if (strstr(UART_buffer, "HELLO") != NULL) {
                 delay_s(1);
-                show_buffer();
-                SMS_send("Yes I am ALive");
-            } else if (strstr(UART_buffer, "ALARM") != NULL) {
+                //show_buffer();
+                SMS_send("Yes I am ALive");    
+            }
+            ///////////////////////////////////////////////////////////////////            
+            else if (strstr(UART_buffer, "STATUS") != NULL) {
                 delay_s(1);
                 //show_buffer();
-                Send_Message(0x02, 3);
- 
-            } else if (strstr(UART_buffer, "OFF") != NULL) {
+                sensor_state = Send_Message(0x02, 1);
+                itoa(number, sensor_state, 10);
+                SMS_send("Status:");
+                SMS_send(number);
+            }
+            ///////////////////////////////////////////////////////////////////            
+            else if (strstr(UART_buffer, "ALARM") != NULL) {
                 delay_s(1);
                 //show_buffer();
-
+                Send_Message(0x02, 3); 
+            }
+            ///////////////////////////////////////////////////////////////////            
+            else if (strstr(UART_buffer, "OFF") != NULL) {
+                delay_s(1);
+                //show_buffer();
                 Send_Message(0x02, 10);
-
-
-            } else if (strstr(UART_buffer, "ON") != NULL) {
+            }
+            ///////////////////////////////////////////////////////////////////            
+            else if (strstr(UART_buffer, "ON") != NULL) {
                 delay_s(1);
                 //show_buffer();
                 Alarm_ON = 1;
                 Send_Message(0x02, 2);
-            } else {
+            }
+            ///////////////////////////////////////////////////////////////////            
+            else {
                 delay_s(1);
                 show_buffer();
                 LCD_send("Unknown command", 0, 1);
@@ -202,14 +216,27 @@ main() {
          */
 
         if (Alarm_ON == 1) {
-            LCD_send("Ask Waiting", 0, 1);
-            LCD_send("sensor status", 1, 1);
-            delay_s(5);
+            LCD_send("Get Sensor Status", 0, 1);
+            LCD_send("in 5", 1, 1);
+            delay_s(1);
+            LCD_send("in 4", 1, 1);
+            delay_s(1);
+            LCD_send("in 3", 1, 1);
+            delay_s(1);
+            LCD_send("in 2", 1, 1);
+            delay_s(1);
+            LCD_send("in 1", 1, 1);
+            delay_s(1);
 
-            sensor_state = Send_Message(0x02, 1);
+            sensor_state = Send_Message(0x02, 1); //Request status
             if (last_sensor_state != sensor_state) {
 
+                //LCD_send("Receive Value:", 0, 1);
+                //itoa(number, sensor_state, 10);
+                //LCD_send(number, 1, 1);
+
                 if (sensor_state == 0xFF) {
+                    SMS_send("Failed to communicate with sensor");
                     LCD_send("RX ERROR", 0, 1);
                     LCD_send("RX ERROR", 1, 1);
                 } else if (sensor_state == 0x01) {
@@ -238,11 +265,11 @@ main() {
                     LCD_send("Alarm By Request", 0, 1);
                     LCD_send("Sound Timeout", 1, 1);
                 } else if (sensor_state == 10) {
-                    SOUND = 0b0;
-                    Alarm_ON = 0;
                     SMS_send("Alarm OFF !!!");
                     LCD_send("Alarm OFF", 0, 1);
                     LCD_send("Alarm OFF", 1, 1);
+                    SOUND = 0b0;
+                    Alarm_ON = 0;
                 }
             }
             last_sensor_state = sensor_state;
