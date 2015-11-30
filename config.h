@@ -4,12 +4,14 @@
  *
  * Created on September 18, 2015, 5:22 PM
  
+ * Capacitor UPW0J472MHD
+ * relay rs-5
 
     ----------------------------   
    -| 1                     40 |-     
 RA0-| 2 LED                 39 |-   
    -| 3                     38 |-   
-   -| 4               ALARM 37 |-RB4    
+   -| 4               SOUND 37 |-RB4    
    -| 5               LED_3 36 |-RB3   
    -| 6               LED_2 35 |-RB2   
    -| 7               LED_1 34 |-RB1   
@@ -124,7 +126,7 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 
 #define SENS_0 PORTCbits.RC4
 
-#define ALARM  LATBbits.LATB4
+#define SOUND  LATBbits.LATB4
 
 #define LCD_LED     LATCbits.LATC1
 #define LCD_PIN_RS  LATCbits.LATC2
@@ -140,8 +142,8 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 #define   nSEL      LATDbits.LATD4
 
 unsigned char RF_RXBUF[8];
-#define UART_buf_size  128
-char  UART_buffer[UART_buf_size]="--------------------------------------------------------------------------------------------------------------------------------";
+#define UART_buf_size  32
+unsigned char  UART_buffer[UART_buf_size]="--------------------------------";
 
 
 void System_startup(){

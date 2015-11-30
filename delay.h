@@ -20,7 +20,6 @@ void delay_ms(int repeat){
     }
 }
 
-
 void delay_s(int repeat){
     while(repeat--){
         delay_ms(1000);

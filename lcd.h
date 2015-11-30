@@ -105,8 +105,8 @@ void LCD_Init(){
     // Define two 8 character strings
     const char line1[] = "-=HELLO  WORLD=-";
       
+    LCD_send(line1,0,0);
     LCD_send(line1,1,0);
-    LCD_send(line1,2,0);
       
     LCD_LED = 1;
     delay_ms(500);

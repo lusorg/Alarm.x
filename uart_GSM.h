@@ -23,7 +23,8 @@
     
     BAUDCONbits.BRG16 = 0b0; // 8 bit generator baud
     BAUDCONbits.ABDEN = 0b0; // Disable auto baud
-    SPBRG = 0b110011;  
+    SPBRG  = 207;
+    
  }
 
 
@@ -36,23 +37,30 @@
  void UART_Write_Text(char *text)
 {
   int i;
+  
   for(i=0;text[i]!='\0';i++)
     UART_Write_byte(text[i]);
 }
   
+ char *Last_SMS;
+ 
  SMS_send(char *text){
-     UART_Write_Text("AT\r");
-     delay_ms(500);
-     UART_Write_Text("AT+CMGF=1\r");
-     delay_ms(500);
-     UART_Write_Text("AT+CMGS=\"968390952\"\r");
-     delay_ms(500);
-     UART_Write_Text(text);
-     delay_ms(500);
-     UART_Write_byte(0x1A);
-     delay_ms(500);
-     UART_Write_Text("\r");
-     delay_s(5);
+     
+     if (strcmp(Last_SMS, text)!=0){
+        UART_Write_Text("AT\r");
+        delay_ms(500);
+        UART_Write_Text("AT+CMGF=1\r");
+        delay_ms(500);
+        UART_Write_Text("AT+CMGS=\"968390952\"\r");
+        delay_ms(500);
+        UART_Write_Text(text);
+        delay_ms(500);
+        UART_Write_byte(0x1A);
+        delay_ms(500);
+        UART_Write_Text("\r");
+        delay_s(5);
+        Last_SMS = text;
+     }
  }
  
   SMS_read(){
@@ -63,6 +71,7 @@
  }
   
   SMS_delete(){
+      
      UART_Write_Text("AT+CMGD=1\r");
      delay_s(1);
      UART_Write_Text("AT+CMGD=2\r");
@@ -88,8 +97,8 @@
   
   void UART_clean_buffer(){
     int i = 0;
-    for(i=0; i < UART_buf_size-1 ; i++)
-        UART_buffer[1] = "-";
+    for(i=0; i < UART_buf_size ; i++)
+        UART_buffer[i] = "-";
   }
   
    void interrupt UART_add_buffer()
@@ -98,13 +107,10 @@
      char byte_rx = RCREG;
      
      // SHIFT ALL BUFFER  
-     if (byte_rx != '\r' && byte_rx != '\n'){
-         loop_ring:
-            UART_buffer[i] = UART_buffer[i+1];
-            i=i+1;
-            if (i != UART_buf_size-1){
-                goto loop_ring;
-            }
+     if ((byte_rx != '\r') && (byte_rx != '\n')) {
+         for(i=0; i < UART_buf_size-1; i++){
+             UART_buffer[i]=UART_buffer[i+1];
+         }
          UART_buffer[UART_buf_size-1] = byte_rx;
      }
 }
