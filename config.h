@@ -30,23 +30,37 @@ RD0-| 19 LCD_D4      LCD_D7 22 |-RD3
 RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
      --------------------------
      
-
 /*CONTROLER MSG
+ * 
  * code    | Definition
  *    1    | request status 
  *    2    | disable Alarm 
  *    3    | enable Alarm by request
+ *    10   | Sensor OFF
  */
 
+#define MSG_RQST_STAT 1
+#define MSG_DSBL_ALRM 1
+#define MSG_RQST_ALRM 1
+#define MSG_ALRM_OFF  1
+
 //Sensor MSG
-    /* Alarm_state  | DEFINITION
-     *              |
-     *      1       |    Alarm clear 
-     *      2       |    Alarmed by local sensor
-     *      3       |    Alarmed by local sensor, sound timeout
-     *      4       |    Alarmed by request (request from controller)
-     *      5       |    Alarmed by request, sound timeout
-     */ 
+// Alarm_state  | DEFINITION
+//              |
+//      1       |    Alarm clear 
+//      2       |    Alarmed by local sensor
+//      3       |    Alarmed by local sensor, sound timeout
+//      4       |    Alarmed by request (request from controller)
+//      5       |    Alarmed by request, sound timeout
+//     10       |    Sensor OFF 
+//
+
+#define ST_ALRM_CLEAR    1
+#define ST_ALRM_SENS     2
+#define ST_ALRM_SENS_TMT (ST_ALRM_SENS + 1)
+#define ST_ALRM_REQ       3   
+#define ST_ALRM_REQ_TMT  (ST_ALRM_REQ + 1)
+#define ST_ALRM_OFF       10 
 
 // PIC18F4520 Configuration Bit Settings
 
@@ -112,6 +126,7 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 
 
 
+
 /*
  * 
  * TRIS register (data direction register)
@@ -143,35 +158,47 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
 
 unsigned char RF_RXBUF[8];
 #define UART_buf_size  32
-unsigned char  UART_buffer[UART_buf_size]="--------------------------------";
+unsigned char UART_buffer[UART_buf_size] = "--------------------------------";
 
+void System_startup() {
 
-void System_startup(){
-    
     WDTCONbits.SWDTEN = 0; //turn off watch dog timer
-    
-    OSCCONbits.IRCF   = 0b111; //Set to 8MHZ
-    OSCTUNEbits.PLLEN = 0b1;   //Enable PLL
-   
+
+    OSCCONbits.IRCF = 0b111; //Set to 8MHZ
+    OSCTUNEbits.PLLEN = 0b1; //Enable PLL
+
     TRISAbits.TRISA0 = 0; // RA0 to output
-    ADCON1bits.PCFG0 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG1 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG2 = 0b1;  // set to ANALOG OFF
-    ADCON1bits.PCFG3 = 0b1;  // set to ANALOG OFF
-   
+    ADCON1bits.PCFG0 = 0b1; // set to ANALOG OFF
+    ADCON1bits.PCFG1 = 0b1; // set to ANALOG OFF
+    ADCON1bits.PCFG2 = 0b1; // set to ANALOG OFF
+    ADCON1bits.PCFG3 = 0b1; // set to ANALOG OFF
+
     TRISBbits.TRISB0 = 0; // RB0 to output
     TRISBbits.TRISB1 = 0; // RB1 to output
     TRISBbits.TRISB2 = 0; // RB2 to output
     TRISBbits.TRISB3 = 0; // RB3 to output
-    
-    TRISCbits.TRISC4 = 1;   //SENS_0 input
-    
+
+    TRISCbits.TRISC4 = 1; //SENS_0 input
+
     // Alarm output 
     TRISBbits.TRISB4 = 0; // RA0 to output
-    
+
     // Enable interrupt
-    PIE1bits.RCIE   = 0b1; // uart receive interupt
+    PIE1bits.RCIE = 0b1; // uart receive interupt
     INTCONbits.PEIE = 0b1; // periperial interrupt enable
-    INTCONbits.GIE  = 0b1; // Global interupt enable
- 
+    INTCONbits.GIE = 0b1; // Global interupt enable
+
+    //Enable Timer0
+
+    //T0CONbits.T0PS0 =1; //Prescaler is divide by 256
+    //T0CONbits.T0PS1 =1;
+    //T0CONbits.T0PS2 =1;
+
+    //T0CONbits.PSA   = 0;      //Timer Clock Source is from Prescaler
+
+    //T0CONbits.T0CS  = 0;     //Prescaler gets clock from FCPU (5MHz)
+
+    //T0CONbits.T08BIT=0;   //8 BIT MODE
+
+
 }
