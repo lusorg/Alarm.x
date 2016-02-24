@@ -5,10 +5,13 @@
  * Created on September 18, 2015, 12:39 PM
  */
 
-
- void UART_Init()
+void UART_Init()
  {
-    // Serial Interface
+    // reset gsm
+    TRISCbits.RC5 = 0b0;
+    LATCbits.LATC5 = 0b1;
+            
+    // Serial Interface        
     TRISCbits.RC6 = 0b1;
     TRISCbits.RC7 = 0b1;
     
@@ -24,7 +27,6 @@
     BAUDCONbits.BRG16 = 0b0; // 8 bit generator baud
     BAUDCONbits.ABDEN = 0b0; // Disable auto baud
     SPBRG  = 207;
-    
  }
 
 
@@ -101,11 +103,11 @@
         UART_buffer[i] = "-";
   }
   
-   void interrupt UART_add_buffer()
+void interrupt UART_add_buffer()
 {
      int i = 0;
      char byte_rx = RCREG;
-     
+     LED_3 = 1;
      // SHIFT ALL BUFFER  
      if ((byte_rx != '\r') && (byte_rx != '\n')) {
          for(i=0; i < UART_buf_size-1; i++){
@@ -113,4 +115,5 @@
          }
          UART_buffer[UART_buf_size-1] = byte_rx;
      }
+     LED_3 = 0;
 }

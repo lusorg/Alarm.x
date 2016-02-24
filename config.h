@@ -30,6 +30,9 @@ RD0-| 19 LCD_D4      LCD_D7 22 |-RD3
 RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
      --------------------------
      
+ * 
+ * 
+ * 
 /*CONTROLER MSG
  * 
  * code    | Definition
@@ -39,10 +42,12 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
  *    10   | Sensor OFF
  */
 
+
+
 #define MSG_RQST_STAT 1
-#define MSG_DSBL_ALRM 1
-#define MSG_RQST_ALRM 1
-#define MSG_ALRM_OFF  1
+#define MSG_DSBL_ALRM 2
+#define MSG_RQST_ALRM 3
+#define MSG_ALRM_OFF  10
 
 //Sensor MSG
 // Alarm_state  | DEFINITION
@@ -133,15 +138,14 @@ RD1-| 20 LCD_D5      LCD_D6 21 |-RD2
  * PORT register (reads the levels on the pins of the device)
  * LAT register (output latch)
  */
-#define LED_0 LATBbits.LATB0
-#define LED_1 LATBbits.LATB1
-#define LED_2 LATBbits.LATB2
-#define LED_3 LATBbits.LATB3
-#define LED   LATAbits.LATA0
+#define LED_0 LATAbits.LATA0
+#define LED_1 LATAbits.LATA1
+#define LED_2 LATAbits.LATA2
+#define LED_3 LATAbits.LATA3
 
-#define SENS_0 PORTCbits.RC4
+#define SENS_0 PORTBbits.RB4
 
-#define SOUND  LATBbits.LATB4
+#define SOUND  LATCbits.LATC0
 
 #define LCD_LED     LATCbits.LATC1
 #define LCD_PIN_RS  LATCbits.LATC2
@@ -166,27 +170,31 @@ void System_startup() {
 
     OSCCONbits.IRCF = 0b111; //Set to 8MHZ
     OSCTUNEbits.PLLEN = 0b1; //Enable PLL
-
-    TRISAbits.TRISA0 = 0; // RA0 to output
+    
     ADCON1bits.PCFG0 = 0b1; // set to ANALOG OFF
     ADCON1bits.PCFG1 = 0b1; // set to ANALOG OFF
     ADCON1bits.PCFG2 = 0b1; // set to ANALOG OFF
     ADCON1bits.PCFG3 = 0b1; // set to ANALOG OFF
 
-    TRISBbits.TRISB0 = 0; // RB0 to output
-    TRISBbits.TRISB1 = 0; // RB1 to output
-    TRISBbits.TRISB2 = 0; // RB2 to output
-    TRISBbits.TRISB3 = 0; // RB3 to output
+    //led output port setup
+    TRISAbits.TRISA0 = 0; // LED RA0 to output
+    TRISAbits.TRISA1 = 0; // LED RA1 to output
+    TRISAbits.TRISA2 = 0; // LED RA2 to output
+    TRISAbits.TRISA3 = 0; // LED RA3 to output
 
-    TRISCbits.TRISC4 = 1; //SENS_0 input
+    //Sensor input port setup
+    TRISBbits.TRISB4 = 1; //SENS_0 input
 
-    // Alarm output 
-    TRISBbits.TRISB4 = 0; // RA0 to output
+    // Alarm output port setup 
+    TRISCbits.TRISC0 = 0; // RC0 to output
 
+    // Relay output port setup 
+    TRISBbits.TRISB7 = 0; // RA7 to output
+    
     // Enable interrupt
-    PIE1bits.RCIE = 0b1; // uart receive interupt
+    PIE1bits.RCIE   = 0b1; // uart receive interrupt
     INTCONbits.PEIE = 0b1; // periperial interrupt enable
-    INTCONbits.GIE = 0b1; // Global interupt enable
+    INTCONbits.GIE  = 0b1; // Global interupt enable
 
     //Enable Timer0
 

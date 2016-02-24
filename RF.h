@@ -3,11 +3,6 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 
 
-
-
-
-
-
 void RF_Write_bit( uchar value ) {
   SCK=0;
   delay_us(1);
@@ -81,7 +76,8 @@ void RF_Init_RF(void) {
   // PORT DEFINITION
 
   // INPUTS
-  TRISDbits.TRISD7 = 1;   //SDO  
+  TRISDbits.TRISD7 = 1;   //SDO
+  TRISBbits.TRISB0 = 1;   //int  
 
   // OUTPUTS
   TRISDbits.TRISD6 = 0;   //SCK
@@ -168,8 +164,7 @@ unsigned char RF_receive(void){
     unsigned char i = 0;
     
     if(RF_Data_Ready() == 1){
-        LED = 1;
-        LED_1 = 0;
+        LED_1 = 1;
         RF_RXBUF[0] = RF_Read_FIFO();
         //UART_Write_byte(RF_RXBUF[0]);
         while(RF_Data_Ready() == 0);  // WAITING FOR NEXT BYTE NEED TO PUT A TIMEOUT HERE
@@ -181,36 +176,31 @@ unsigned char RF_receive(void){
         // OK STATE COM OK AND ADDRESS OK
         if( RF_RXBUF[0] + RF_RXBUF[1] == RF_RXBUF[2] && RF_RXBUF[0] == Dev_Address){
             RF_Rst_FIFO(); //Clear FIFO
-            LED  = 0;
-            LED_1 = 1; 
+            LED_1 = 0; 
             return RF_RXBUF[1];
         }
         // COM INVALID
         else if ((RF_RXBUF[0] + RF_RXBUF[1])!= RF_RXBUF[2]){
             RF_Rst_FIFO(); //Clear FIFO
-            LED  = 0;
-            LED_1 = 1; 
+            LED_1 = 0; 
             return 0xFF;
 
         }
         // MESSAGE NOT FOR THIS SENSOR 
         else{
-            LED  = 0;
-            LED_1 = 1; 
+            LED_1 = 0; 
             RF_Rst_FIFO(); //Clear FIFO
             return 0;
         }
     }
         
-    LED  = 0;
-    LED_1 = 1;   
+    LED_1 = 0;   
     return 0;  // no data to receive
 }
 
 void RF_transmit(unsigned char address, unsigned char command){
 
-    LED_0 = 0;    
-    LED = 1;
+    LED_0 = 1;    
     
     
     WriteCMD(0x8278); //Enable transmiter
@@ -239,6 +229,5 @@ void RF_transmit(unsigned char address, unsigned char command){
     WriteCMD(0x82D8);
     delay_ms(200);
     RF_Rst_FIFO();
-    LED_0 = 1;
-    LED = 0;
+    LED_0 = 0;
 }

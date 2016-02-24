@@ -7,25 +7,23 @@
 
 #define _XTAL_FREQ 32000000
 
-void delay_us(int repeat){
-    while(repeat--){
+void delay_us(int repeat_1){
+    while(repeat_1--){
         __delay_us(1);
     }
 }
 
-
-void delay_ms(int repeat){
-    while(repeat--){
+void delay_ms(int repeat_2){
+    while(repeat_2--){
         __delay_ms(1);
     }
 }
 
-void delay_s(int repeat){
-    while(repeat--){
+void delay_s(int repeat_3){
+    while(repeat_3--){
         delay_ms(1000);
     }
 }
-
 
 
 

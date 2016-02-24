@@ -25,8 +25,8 @@ unsigned char Alarm_ON = 1;
 #include <xc.h>
 #include <string.h>
 
-#include "./config.h"
 #include "./delay.h"
+#include "./config.h"
 #include "./lcd.h"
 #include "./uart_GSM.h"
 #include "./RF.h"
@@ -123,20 +123,21 @@ void show_buffer() {
     LCD_send_data_byte(UART_buffer[29]);
     LCD_send_data_byte(UART_buffer[30]);
     LCD_send_data_byte(UART_buffer[31]);
-    delay_s(1);
+    //delay_s(1);
 }
 
 main() {
+    
+    System_startup();
+    UART_Init();
+    LCD_Init();
+    RF_Init_RF();
 
     for (n = 0; n < n_Sensor; n++) {
         sensor_state[n] = 0xFE; // STARTUP DUMMY STATES
         last_sensor_state[n] = 0xFE;
     }
 
-    System_startup();
-    LCD_Init();
-    RF_Init_RF();
-    UART_Init();
 
     delay_s(10);
     UART_Write_Text("AT\r");
@@ -159,8 +160,14 @@ main() {
     //timer control
     //INTCONbits.TMR0IF = 0;
     //T0CONbits.TMR0ON=1;
-
+    
+    LED_0 = 0;
+    LED_1 = 0;
+    LED_2 = 0;
+    LED_3 = 0;
+     
     while (1) {
+
 
         /*CONTROLER MSG
          * code    | Definition
@@ -250,7 +257,7 @@ main() {
             delay_s(1);
 
             for (n = 0; n < n_Sensor; n++) {
-                sensor_state[n] = Send_Message([n+2], MSG_RQST_STAT); //Request status
+                sensor_state[n] = Send_Message(n+2, MSG_RQST_STAT); //Request status
 
                 if (last_sensor_state[n] != sensor_state[n]) {
                     if (sensor_state[n] == 0xFF) {
